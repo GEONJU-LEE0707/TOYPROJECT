@@ -1,5 +1,5 @@
 import streamlit as st
-import openai
+from langchain_openai import ChatOpenAI
 
 # Streamlit 애플리케이션 설정
 st.set_page_config(page_title="AI English Chat", layout="wide")
@@ -11,8 +11,6 @@ if not api_key:
     st.sidebar.warning("Please enter your API Key to start.")
     st.stop()
 
-# OpenAI API 설정
-openai.api_key = api_key
 
 # 사용자 설정 변수 초기화
 if "user_settings" not in st.session_state:
@@ -37,7 +35,7 @@ if st.session_state["user_settings"] is None:
     if st.button("Start Chatting"):
         st.session_state["user_settings"] = {"level": level, "age": age, "gender": gender}
         st.success("Settings saved! Start chatting below.")
-        st.experimental_rerun()
+        # st.experimental_rerun()
 
 # 채팅 화면
 else:
@@ -62,18 +60,14 @@ else:
             
             # OpenAI API 호출
             try:
-                response = openai.ChatCompletion.create(
-                    model="gpt-4",
-                    messages=[
-                        {"role": "system", "content": f"You are an English tutor for a {st.session_state['user_settings']['level']} learner."},
-                        *st.session_state["chat_history"]
-                    ],
-                    max_tokens=200,
-                    temperature=0.7
+                llm = ChatOpenAI(
+                temperature=0.1,  # 창의성 (0.0 ~ 2.0)
+                model_name="gpt-4o-mini",  # 모델명
+                api_key = api_key,
                 )
-                ai_reply = response["choices"][0]["message"]["content"]
+                
+                ai_reply = llm.invoke(f"""You are an English tutor for a {st.session_state['user_settings']['level']} learner. ### chat history ### {st.session_state["chat_history"]}""").content
                 st.session_state["chat_history"].append({"role": "assistant", "content": ai_reply})
-                st.experimental_rerun()
             except Exception as e:
                 st.error(f"Error: {e}")
 
