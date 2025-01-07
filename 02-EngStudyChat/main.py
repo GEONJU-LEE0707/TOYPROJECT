@@ -93,17 +93,10 @@ else:
         user_texts = [msg["content"] for msg in st.session_state["chat_history"] if msg["role"] == "user"]
         if user_texts:
             try:
-                review_response = openai.ChatCompletion.create(
-                    model="gpt-4",
-                    messages=[
-                        {"role": "system", "content": "You are an English tutor. Review the following conversation for grammar and clarity."},
-                        {"role": "user", "content": "\n".join(user_texts)}
-                    ],
-                    max_tokens=300,
-                    temperature=0.5
-                )
+                review_response = llm.invoke(f"""You are an English tutor. Review the following conversation for grammar and clarity. ### chat history ### {st.session_state["chat_history"]}""").content
+                    
                 st.write("### Review and Feedback:")
-                st.write(review_response["choices"][0]["message"]["content"])
+                st.write(review_response)
             except Exception as e:
                 st.error(f"Error: {e}")
         else:
